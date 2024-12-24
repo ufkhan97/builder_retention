@@ -213,7 +213,7 @@ def build_cohort_retention_tables(project_data, unique_id):
     max_round = int(project_data['round_num'].max())
 
     # Create a pivot table with cohorts as index and rounds as columns
-    cohort_table = pd.pivot_table(project_data, values=unique_id, index='cohort', columns='round_num', aggfunc='nunique', fill_value=0)
+    cohort_table = pd.pivot_table(project_data, values=unique_id, index='cohort', columns='round_num', aggfunc=lambda x: len(set(x)), fill_value=0)
 
     # Ensure cohort_table includes all cohorts and rounds
     all_cohorts = pd.Index(range(min_cohort, max_cohort + 1), name='cohort')
@@ -245,10 +245,10 @@ def plot_cohort_retention_heatmap(retention_table):
     for n in range(len(retention_table)):
         if n != 0:
             retention_table.iloc[n, -n:] = np.nan
-
+    
     # Create the heatmap using Plotly Express
     fig = px.imshow(retention_table,
-                    labels=dict(x="Round Number", y="Cohort", color="Retention Rate"),
+                    labels=dict(x="Rounds Since Cohort Joined", y="Cohort", color="Retention Rate"),
                     x=retention_table.columns[:],
                     y=retention_table.index,
                     color_continuous_scale=px.colors.sequential.Blues,
@@ -258,7 +258,7 @@ def plot_cohort_retention_heatmap(retention_table):
     # Customize the heatmap layout
     fig.update_layout(
         xaxis=dict(
-            title='Rounds Since Cohort Joined',
+            title='Retention Rate (Rounds Since Cohort Joined)',
             side='top'
         ),
         yaxis_title='Cohort',
@@ -284,16 +284,16 @@ unique_id = 'group_id' # group_id OR project_name OR project_id OR recipient_add
 df = run_query(query)
 df['round_num'] = pd.to_numeric(df['round_num'], errors='coerce')
 df = df.dropna(subset=['round_num'])
-df['cohort'] = df.groupby(unique_id)['round_num'].transform('min')
 
 ## SET UP FILTERS
 first_round = st.selectbox("Select the first round to include in the analysis", sorted(df['round_num'].unique().tolist()), index=0)
 round_type = st.selectbox("Select Round Type (Optional - not all historic rounds are tagged)", ['All'] + df['type'].unique().tolist())
 
-if first_round:
-    df = df[df['round_num'] >= first_round]
+
+df = df[df['round_num'] >= first_round]
 if round_type != 'All':
     df = df[df['type'] == round_type]
+df['cohort'] = df.groupby(unique_id)['round_num'].transform('min')
 
 
 ## MAKE BAR GRAPH
@@ -305,6 +305,8 @@ summary_df = make_retention_bar_graph(df, unique_id)
 
 ## MAKE HEATMAP
 cohort_table, retention_table = build_cohort_retention_tables(df, unique_id)
+st.write(cohort_table)
+st.write(retention_table)
 st.subheader("Retention Heatmap")
 st.write("The heatmap illustrates the retention rates of projects across different cohorts and rounds, providing a visual representation of project longevity.")
 st.write("The heatmap is interactive. You can hover over each cell to see the retention rate for that cohort and round.")
@@ -318,12 +320,13 @@ round_data = df[df['round_num'] == round_num]
 round_name = st.selectbox("Select a round to drill down into", ['All'] + round_data['round_name'].unique().tolist())
 if round_name != 'All':
     round_data = round_data[(round_data['round_name'] == round_name)]
-round_data = round_data[['status', 'project_name'] + [col for col in round_data.columns if col not in ['status', 'project_name']]]
+round_data = round_data[['status', 'project_name', 'group_id'] + [col for col in round_data.columns if col not in ['status', 'project_name', 'group_id']]]
 st.write(round_data)
 
 ## SPECIAL NOTE
 st.subheader("Special Note: Project Mapping")
-st.write("Sometimes projects which should be grouped together are not grouped together. This is usually because the project owner created a new project and the ID changed. Sometimes, it can be because the previous project was on cGrants or a different chain.")
-st.write("If you notice a case like this and can identify both the old and new project by their ID, we can manually map them together.")
+st.write("Sometimes projects which should be tracked as the same project from round to round are not tracked as the same project. This is usually because the project owner created a new project and the ID changed. Sometimes, it can be because the previous project was on cGrants or a different chain (although we already have most of these cases covered).")
+st.write("To check if projects are being tracked as the same project, see if they have the same group_id. The group_id is an ID generated in RegenData that links projects that share the same name, wallet address, and other identifying information. If they have the same group_id, they are the same project.")
+st.write("If you notice a case where two projects should have the same group_id and can identify both the old and new project by their project_id, we can manually map them together.")
 st.write("To add a mapping, please add a row to this sheet: https://docs.google.com/spreadsheets/d/1dhB_HxxulDNi0EowQeJqH-Uzbbx7CLXLKleAVo-tZtY/edit?gid=0#gid=0")
 st.write("The mapping gets applied within 24 hours.")
