@@ -305,8 +305,6 @@ summary_df = make_retention_bar_graph(df, unique_id)
 
 ## MAKE HEATMAP
 cohort_table, retention_table = build_cohort_retention_tables(df, unique_id)
-st.write(cohort_table)
-st.write(retention_table)
 st.subheader("Retention Heatmap")
 st.write("The heatmap illustrates the retention rates of projects across different cohorts and rounds, providing a visual representation of project longevity.")
 st.write("The heatmap is interactive. You can hover over each cell to see the retention rate for that cohort and round.")
