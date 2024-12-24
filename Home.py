@@ -275,6 +275,7 @@ def plot_cohort_retention_heatmap(retention_table):
     st.plotly_chart(fig)
 ### START APP
 st.set_page_config(page_title="GG Builder Retention", page_icon="assets/favicon.png", layout="wide")
+st.image("assets/logo.png", width=200)
 st.title("📊 Gitcoin Grants Builder Retention")
 st.write("This dashboard shows the retention of builders/projects in the Gitcoin Grants program. It shows the number of projects that are new, retained, and resurrected in each round.")
 
@@ -284,6 +285,16 @@ df = run_query(query)
 df['round_num'] = pd.to_numeric(df['round_num'], errors='coerce')
 df = df.dropna(subset=['round_num'])
 df['cohort'] = df.groupby(unique_id)['round_num'].transform('min')
+
+## SET UP FILTERS
+first_round = st.selectbox("Select the first round to include in the analysis", sorted(df['round_num'].unique().tolist()), index=0)
+round_type = st.selectbox("Select Round Type (Optional - not all historic rounds are tagged)", ['All'] + df['type'].unique().tolist())
+
+if first_round:
+    df = df[df['round_num'] >= first_round]
+if round_type != 'All':
+    df = df[df['type'] == round_type]
+
 
 ## MAKE BAR GRAPH
 st.subheader("Builders by Round")
@@ -302,7 +313,7 @@ plot_cohort_retention_heatmap(retention_table)
 
 ## DRILL DOWN INTO A ROUND
 st.subheader("Drill Down into a Round")
-round_num = st.selectbox("Select a program number to drill down into", df['round_num'].unique())
+round_num = st.selectbox("Select a program number to drill down into", sorted(df['round_num'].unique()))
 round_data = df[df['round_num'] == round_num]
 round_name = st.selectbox("Select a round to drill down into", ['All'] + round_data['round_name'].unique().tolist())
 if round_name != 'All':
