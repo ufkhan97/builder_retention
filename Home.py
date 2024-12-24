@@ -320,3 +320,10 @@ if round_name != 'All':
     round_data = round_data[(round_data['round_name'] == round_name)]
 round_data = round_data[['status', 'project_name'] + [col for col in round_data.columns if col not in ['status', 'project_name']]]
 st.write(round_data)
+
+## SPECIAL NOTE
+st.subheader("Special Note: Project Mapping")
+st.write("Sometimes projects which should be grouped together are not grouped together. This is usually because the project owner created a new project and the ID changed. Sometimes, it can be because the previous project was on cGrants or a different chain.")
+st.write("If you notice a case like this and can identify both the old and new project by their ID, we can manually map them together.")
+st.write("To add a mapping, please add a row to this sheet: https://docs.google.com/spreadsheets/d/1dhB_HxxulDNi0EowQeJqH-Uzbbx7CLXLKleAVo-tZtY/edit?gid=0#gid=0")
+st.write("The mapping gets applied within 24 hours.")
