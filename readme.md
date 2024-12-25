@@ -40,3 +40,5 @@ Run the dashboard: `streamlit run Home.py`
 ## Note
 
 For project mapping updates or corrections, please use [this spreadsheet](https://docs.google.com/spreadsheets/d/1dhB_HxxulDNi0EowQeJqH-Uzbbx7CLXLKleAVo-tZtY/edit?gid=0).
+
+To keep the round numbers up to date, please use this spreadsheet: [Round Labels](https://docs.google.com/spreadsheets/u/2/d/1d1d53xStoPMsLCvjLnqCmNicpak-Ji3gpSaRqiZp2sA/edit?gid=1514360547#gid=1514360547)
